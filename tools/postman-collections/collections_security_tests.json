@@ -1,0 +1,1173 @@
+{
+	"info": {
+		"_postman_id": "12345678-1234-1234-1234-123456789abc",
+		"name": "API Security Test Collection",
+		"description": "Comprehensive API security testing collection for identifying common vulnerabilities and security misconfigurations.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "123456"
+	},
+	"item": [
+		{
+			"name": "Authentication Tests",
+			"item": [
+				{
+					"name": "Valid Authentication",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Response status code is 200', function () {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"",
+									"pm.test('Response contains access token', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('access_token');",
+									"    pm.environment.set('access_token', responseJson.access_token);",
+									"});",
+									"",
+									"pm.test('Token format validation', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const token = responseJson.access_token;",
+									"    // Check if JWT token format",
+									"    pm.expect(token.split('.')).to.have.lengthOf(3);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{test_username}}\",\n    \"password\": \"{{test_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "Invalid Credentials Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Response status code is 401', function () {",
+									"    pm.expect(pm.response.code).to.equal(401);",
+									"});",
+									"",
+									"pm.test('Error message does not reveal system information', function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"    pm.expect(responseText).to.not.include('sql');",
+									"    pm.expect(responseText).to.not.include('database');",
+									"    pm.expect(responseText).to.not.include('exception');",
+									"    pm.expect(responseText).to.not.include('stack trace');",
+									"});",
+									"",
+									"pm.test('Generic error message returned', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.error).to.not.be.empty;",
+									"    // Should be generic, not reveal whether username or password is wrong",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"invalid_user\",\n    \"password\": \"wrong_password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "JWT None Algorithm Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('None algorithm should be rejected', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+									"});",
+									"",
+									"pm.test('No sensitive data in error response', function () {",
+									"    const responseText = pm.response.text();",
+									"    pm.expect(responseText).to.not.include('admin');",
+									"    pm.expect(responseText).to.not.include('user data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VyIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifQ."
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"users"
+							]
+						}
+					}
+				},
+				{
+					"name": "Authentication Header Bypass Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Header bypass should be rejected', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+									"});",
+									"",
+									"pm.test('Should not grant admin access', function () {",
+									"    if (pm.response.code === 200) {",
+									"        const responseJson = pm.response.json();",
+									"        pm.expect(responseJson).to.not.have.property('admin_data');",
+									"        pm.expect(responseJson).to.not.have.property('users');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "admin"
+							},
+							{
+								"key": "X-Forwarded-User",
+								"value": "administrator"
+							},
+							{
+								"key": "X-Remote-User",
+								"value": "root"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"users"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Authorization Tests",
+			"item": [
+				{
+					"name": "Horizontal Privilege Escalation Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Should not access other user data', function () {",
+									"    if (pm.response.code === 200) {",
+									"        const responseJson = pm.response.json();",
+									"        // Should not return data for user_id 999 when authenticated as different user",
+									"        pm.expect(responseJson.user_id).to.not.equal(999);",
+									"    } else {",
+									"        pm.expect(pm.response.code).to.be.oneOf([401, 403, 404]);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/users/999/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"999",
+								"profile"
+							]
+						}
+					}
+				},
+				{
+					"name": "Vertical Privilege Escalation Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Regular user should not access admin endpoints', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+									"});",
+									"",
+									"pm.test('No admin data in response', function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"    pm.expect(responseText).to.not.include('admin');",
+									"    pm.expect(responseText).to.not.include('users list');",
+									"    pm.expect(responseText).to.not.include('system config');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/system-config",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"system-config"
+							]
+						}
+					}
+				},
+				{
+					"name": "Direct Object Reference Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Should not expose sensitive document', function () {",
+									"    if (pm.response.code === 200) {",
+									"        const responseJson = pm.response.json();",
+									"        pm.expect(responseJson).to.not.have.property('confidential_data');",
+									"        pm.expect(responseJson).to.not.have.property('ssn');",
+									"        pm.expect(responseJson).to.not.have.property('credit_card');",
+									"    } else {",
+									"        pm.expect(pm.response.code).to.be.oneOf([401, 403, 404]);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/documents/12345",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"documents",
+								"12345"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Input Validation Tests",
+			"item": [
+				{
+					"name": "SQL Injection Test - Basic",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('SQL injection should be blocked', function () {",
+									"    pm.expect(pm.response.code).to.not.equal(200);",
+									"});",
+									"",
+									"pm.test('No database error messages', function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"    pm.expect(responseText).to.not.include('sql');",
+									"    pm.expect(responseText).to.not.include('mysql');",
+									"    pm.expect(responseText).to.not.include('postgresql');",
+									"    pm.expect(responseText).to.not.include('ora-');",
+									"    pm.expect(responseText).to.not.include('syntax error');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users?id=1' OR '1'='1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "1' OR '1'='1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "SQL Injection Test - Union Based",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Union-based SQL injection should be blocked', function () {",
+									"    pm.expect(pm.response.code).to.not.equal(200);",
+									"});",
+									"",
+									"pm.test('No sensitive data exposure', function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"    pm.expect(responseText).to.not.include('admin');",
+									"    pm.expect(responseText).to.not.include('password');",
+									"    pm.expect(responseText).to.not.include('hash');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users?id=1' UNION SELECT username,password FROM admin_users--",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "1' UNION SELECT username,password FROM admin_users--"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "NoSQL Injection Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('NoSQL injection should be blocked', function () {",
+									"    if (pm.response.code === 200) {",
+									"        const responseJson = pm.response.json();",
+									"        // Should not return all users",
+									"        pm.expect(responseJson).to.not.have.property('users');",
+									"        pm.expect(Array.isArray(responseJson)).to.be.false;",
+									"    } else {",
+									"        pm.expect(pm.response.code).to.be.oneOf([400, 401, 403]);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": {\"$ne\": \"\"},\n    \"password\": {\"$ne\": \"\"}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "XSS Test - Reflected",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('XSS payload should be escaped', function () {",
+									"    const responseText = pm.response.text();",
+									"    pm.expect(responseText).to.not.include('<script>alert(1)</script>');",
+									"    pm.expect(responseText).to.not.include('javascript:alert');",
+									"});",
+									"",
+									"pm.test('Content-Type should prevent XSS', function () {",
+									"    const contentType = pm.response.headers.get('Content-Type');",
+									"    pm.expect(contentType).to.include('application/json');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/search?q=<script>alert(1)</script>",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "<script>alert(1)</script>"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Command Injection Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Command injection should be blocked', function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"    pm.expect(responseText).to.not.include('uid=');",
+									"    pm.expect(responseText).to.not.include('gid=');",
+									"    pm.expect(responseText).to.not.include('/etc/passwd');",
+									"    pm.expect(responseText).to.not.include('root:');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/ping?host=8.8.8.8; cat /etc/passwd",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"ping"
+							],
+							"query": [
+								{
+									"key": "host",
+									"value": "8.8.8.8; cat /etc/passwd"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Business Logic Tests",
+			"item": [
+				{
+					"name": "Price Manipulation Test - Negative Price",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Negative prices should be rejected', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test('Order should not be created with negative price', function () {",
+									"    if (pm.response.code === 200) {",
+									"        const responseJson = pm.response.json();",
+									"        pm.expect(responseJson.total).to.be.above(0);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"product_id\": 1,\n    \"quantity\": 1,\n    \"price\": -100.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"orders"
+							]
+						}
+					}
+				},
+				{
+					"name": "Quantity Manipulation Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Negative quantities should be rejected', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"});",
+									"",
+									"pm.test('Order total should be positive', function () {",
+									"    if (pm.response.code === 200) {",
+									"        const responseJson = pm.response.json();",
+									"        pm.expect(responseJson.total).to.be.above(0);",
+									"        pm.expect(responseJson.quantity).to.be.above(0);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"product_id\": 1,\n    \"quantity\": -5,\n    \"price\": 50.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"orders"
+							]
+						}
+					}
+				},
+				{
+					"name": "Workflow Bypass Test - Skip Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Cannot fulfill order without payment', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 403, 409]);",
+									"});",
+									"",
+									"pm.test('Error message indicates payment required', function () {",
+									"    if (pm.response.code !== 200) {",
+									"        const responseText = pm.response.text().toLowerCase();",
+									"        pm.expect(responseText).to.include('payment');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/orders/{{unpaid_order_id}}/fulfill",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"{{unpaid_order_id}}",
+								"fulfill"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Data Exposure Tests",
+			"item": [
+				{
+					"name": "Sensitive Data Exposure Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('No sensitive data in response', function () {",
+									"    const responseText = pm.response.text().toLowerCase();",
+									"    pm.expect(responseText).to.not.include('password');",
+									"    pm.expect(responseText).to.not.include('ssn');",
+									"    pm.expect(responseText).to.not.include('social_security');",
+									"    pm.expect(responseText).to.not.include('credit_card');",
+									"    pm.expect(responseText).to.not.include('api_key');",
+									"    pm.expect(responseText).to.not.include('secret');",
+									"});",
+									"",
+									"pm.test('Response structure is appropriate', function () {",
+									"    if (pm.response.code === 200) {",
+									"        const responseJson = pm.response.json();",
+									"        pm.expect(responseJson).to.have.property('id');",
+									"        pm.expect(responseJson).to.have.property('name');",
+									"        // Should not have internal fields",
+									"        pm.expect(responseJson).to.not.have.property('password_hash');",
+									"        pm.expect(responseJson).to.not.have.property('internal_id');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/users/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"profile"
+							]
+						}
+					}
+				},
+				{
+					"name": "Mass Assignment Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Mass assignment should be prevented', function () {",
+									"    if (pm.response.code === 200) {",
+									"        const responseJson = pm.response.json();",
+									"        // User should not become admin",
+									"        pm.expect(responseJson.role).to.not.equal('admin');",
+									"        pm.expect(responseJson.is_admin).to.not.be.true;",
+									"        pm.expect(responseJson.verified).to.not.be.true;",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Name\",\n    \"email\": \"updated@example.com\",\n    \"role\": \"admin\",\n    \"is_admin\": true,\n    \"verified\": true,\n    \"internal_id\": 999\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"profile"
+							]
+						}
+					}
+				},
+				{
+					"name": "Excessive Data Exposure Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Response should not contain excessive data', function () {",
+									"    if (pm.response.code === 200) {",
+									"        const responseJson = pm.response.json();",
+									"        if (Array.isArray(responseJson)) {",
+									"            pm.expect(responseJson.length).to.be.below(1000);",
+									"        }",
+									"        // Check individual records don't contain too much data",
+									"        if (responseJson.users && responseJson.users.length > 0) {",
+									"            const firstUser = responseJson.users[0];",
+									"            const fieldCount = Object.keys(firstUser).length;",
+									"            pm.expect(fieldCount).to.be.below(20); // Reasonable field limit",
+									"        }",
+									"    }",
+									"});",
+									"",
+									"pm.test('Pagination should be enforced', function () {",
+									"    if (pm.response.code === 200) {",
+									"        const responseJson = pm.response.json();",
+									"        if (responseJson.users) {",
+									"            pm.expect(responseJson).to.have.property('page');",
+									"            pm.expect(responseJson).to.have.property('limit');",
+									"            pm.expect(responseJson).to.have.property('total');",
+									"        }",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/users?limit=10000",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10000"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Rate Limiting Tests",
+			"item": [
+				{
+					"name": "Rate Limit Test - Basic",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Make multiple requests to trigger rate limiting",
+									"const baseUrl = pm.environment.get('base_url');",
+									"const token = pm.environment.get('access_token');",
+									"",
+									"for (let i = 0; i < 20; i++) {",
+									"    pm.sendRequest({",
+									"        url: baseUrl + '/api/users',",
+									"        method: 'GET',",
+									"        header: {",
+									"            'Authorization': 'Bearer ' + token",
+									"        }",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Rate limiting should be enforced', function () {",
+									"    // After making many requests, this one should be rate limited",
+									"    pm.expect(pm.response.code).to.equal(429);",
+									"});",
+									"",
+									"pm.test('Rate limit headers should be present', function () {",
+									"    pm.expect(pm.response.headers.has('X-RateLimit-Limit')).to.be.true;",
+									"    pm.expect(pm.response.headers.has('X-RateLimit-Remaining')).to.be.true;",
+									"    pm.expect(pm.response.headers.has('X-RateLimit-Reset')).to.be.true;",
+									"});",
+									"",
+									"pm.test('Retry-After header should be present', function () {",
+									"    pm.expect(pm.response.headers.has('Retry-After')).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						}
+					}
+				},
+				{
+					"name": "Rate Limit Bypass Test - IP Spoofing",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('IP spoofing should not bypass rate limiting', function () {",
+									"    // Should still be rate limited despite spoofed IP",
+									"    pm.expect(pm.response.code).to.equal(429);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "X-Forwarded-For",
+								"value": "192.168.1.100"
+							},
+							{
+								"key": "X-Real-IP",
+								"value": "10.0.0.1"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Security Headers Tests",
+			"item": [
+				{
+					"name": "Security Headers Validation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('X-Frame-Options header should be present', function () {",
+									"    pm.expect(pm.response.headers.has('X-Frame-Options')).to.be.true;",
+									"    const xFrameOptions = pm.response.headers.get('X-Frame-Options');",
+									"    pm.expect(xFrameOptions).to.be.oneOf(['DENY', 'SAMEORIGIN']);",
+									"});",
+									"",
+									"pm.test('X-Content-Type-Options header should be present', function () {",
+									"    pm.expect(pm.response.headers.has('X-Content-Type-Options')).to.be.true;",
+									"    const xContentType = pm.response.headers.get('X-Content-Type-Options');",
+									"    pm.expect(xContentType).to.equal('nosniff');",
+									"});",
+									"",
+									"pm.test('X-XSS-Protection header should be present', function () {",
+									"    pm.expect(pm.response.headers.has('X-XSS-Protection')).to.be.true;",
+									"    const xssProtection = pm.response.headers.get('X-XSS-Protection');",
+									"    pm.expect(xssProtection).to.include('1');",
+									"});",
+									"",
+									"pm.test('Strict-Transport-Security header should be present for HTTPS', function () {",
+									"    const url = pm.request.url.toString();",
+									"    if (url.startsWith('https')) {",
+									"        pm.expect(pm.response.headers.has('Strict-Transport-Security')).to.be.true;",
+									"    }",
+									"});",
+									"",
+									"pm.test('Content-Security-Policy header should be present', function () {",
+									"    pm.expect(pm.response.headers.has('Content-Security-Policy')).to.be.true;",
+									"});",
+									"",
+									"pm.test('Server header should not reveal version', function () {",
+									"    if (pm.response.headers.has('Server')) {",
+									"        const server = pm.response.headers.get('Server');",
+									"        pm.expect(server).to.not.match(/\\d+\\.\\d+/); // No version numbers",
+									"    }",
+									"});",
+									"",
+									"pm.test('X-Powered-By header should not be present', function () {",
+									"    pm.expect(pm.response.headers.has('X-Powered-By')).to.be.false;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"health"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global pre-request script",
+					"// Set common variables if not already set",
+					"if (!pm.environment.get('base_url')) {",
+					"    pm.environment.set('base_url', 'https://api.example.com');",
+					"}",
+					"",
+					"if (!pm.environment.get('test_username')) {",
+					"    pm.environment.set('test_username', 'testuser');",
+					"}",
+					"",
+					"if (!pm.environment.get('test_password')) {",
+					"    pm.environment.set('test_password', 'testpass123');",
+					"}",
+					"",
+					"// Add timestamp to track request timing",
+					"pm.environment.set('request_timestamp', new Date().getTime());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script",
+					"// Track response times",
+					"const responseTime = pm.response.responseTime;",
+					"const requestTimestamp = pm.environment.get('request_timestamp');",
+					"const currentTime = new Date().getTime();",
+					"",
+					"// Log security test results",
+					"const testResult = {",
+					"    request_name: pm.info.requestName,",
+					"    response_code: pm.response.code,",
+					"    response_time: responseTime,",
+					"    timestamp: new Date().toISOString(),",
+					"    test_passed: pm.test.index === undefined ? 'unknown' : 'recorded'",
+					"};",
+					"",
+					"console.log('Security Test Result:', JSON.stringify(testResult));",
+					"",
+					"// Common security validations for all requests",
+					"pm.test('Response time should be reasonable', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"pm.test('Response should not contain stack traces', function () {",
+					"    const responseText = pm.response.text().toLowerCase();",
+					"    pm.expect(responseText).to.not.include('stack trace');",
+					"    pm.expect(responseText).to.not.include('exception');",
+					"    pm.expect(responseText).to.not.include('traceback');",
+					"});",
+					"",
+					"pm.test('Response should not contain internal paths', function () {",
+					"    const responseText = pm.response.text();",
+					"    pm.expect(responseText).to.not.match(/\\/var\\/www/);",
+					"    pm.expect(responseText).to.not.match(/\\/home\\/\\w+/);",
+					"    pm.expect(responseText).to.not.match(/C:\\\\\\w+/);",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://api.example.com"
+		},
+		{
+			"key": "test_username",
+			"value": "testuser"
+		},
+		{
+			"key": "test_password",
+			"value": "testpass123"
+		},
+		{
+			"key": "access_token",
+			"value": ""
+		},
+		{
+			"key": "unpaid_order_id",
+			"value": "12345"
+		}
+	]
+}

@@ -1,0 +1,149 @@
+{
+  "id": "api-security-test-env",
+  "name": "API Security Test Environment",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.example.com",
+      "description": "Base URL for the API under test",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "description": "Authentication token for authorized requests",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "testUserId",
+      "value": "123",
+      "description": "User ID for testing user-specific endpoints",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "description": "Admin token for privilege escalation tests",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "testOrderId",
+      "value": "order_12345",
+      "description": "Order ID for business logic testing",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "apiKey",
+      "value": "",
+      "description": "API key for API key authentication tests",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "testEmail",
+      "value": "test@example.com",
+      "description": "Email for user registration/login tests",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "testPassword",
+      "value": "TestPassword123!",
+      "description": "Password for authentication tests",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "invalidToken",
+      "value": "invalid_token_12345",
+      "description": "Invalid token for negative testing",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "maliciousPayload",
+      "value": "<script>alert('xss')</script>",
+      "description": "XSS payload for security testing",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "sqlInjectionPayload",
+      "value": "' OR '1'='1",
+      "description": "SQL injection payload for security testing",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "testProductId",
+      "value": "prod_789",
+      "description": "Product ID for testing product-related endpoints",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "testAmount",
+      "value": "99.99",
+      "description": "Test amount for financial transaction testing",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "testCurrency",
+      "value": "USD",
+      "description": "Test currency for financial transaction testing",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rateLimitDelay",
+      "value": "1000",
+      "description": "Delay in milliseconds for rate limiting tests",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "maxRetries",
+      "value": "3",
+      "description": "Maximum number of retries for failed requests",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "timeout",
+      "value": "30000",
+      "description": "Request timeout in milliseconds",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "userAgent",
+      "value": "API-Security-Test/1.0",
+      "description": "User agent string for requests",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "contentType",
+      "value": "application/json",
+      "description": "Default content type for requests",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "acceptHeader",
+      "value": "application/json",
+      "description": "Default accept header for requests",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2024-01-01T00:00:00.000Z",
+  "_postman_exported_using": "Postman/10.0.0"
+}
