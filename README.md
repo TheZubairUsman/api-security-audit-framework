@@ -50,8 +50,8 @@ pip3 install flask requests jsonschema pyyaml
 ## 📋 What's Included
 
 ### 📚 Documentation
-- **[Complete Audit Guide](docs/audit-guide.md)** - Comprehensive 11-phase security audit methodology
-- **[Compliance Checklist](docs/compliance-checklist.md)** - GDPR, PCI DSS, HIPAA, SOX requirements
+- **[Complete Audit Guide](docs/audit_guide.md)** - Comprehensive 11-phase security audit methodology
+- **[Compliance Checklist](docs/compliance_checklist.md)** - GDPR, PCI DSS, HIPAA, SOX requirements
 - **[Remediation Priorities](docs/remediation-priorities.md)** - Risk-based fix prioritization
 - **[GraphQL Security Guide](docs/graphql-security.md)** - Comprehensive GraphQL security testing methodology
 
@@ -62,15 +62,15 @@ pip3 install flask requests jsonschema pyyaml
 - **[GraphQL Security Checklist](checklists/graphql-security-checklist.md)** - GraphQL-specific security testing
 
 ### 🛠️ Automated Tools & Scripts
-- **[Basic Security Scanner](tools/scripts/basic-scan.sh)** - Core vulnerability detection
+- **[Basic Security Scanner](tools/scripts/basic_scan.sh)** - Core vulnerability detection
 - **[Comprehensive Audit](tools/scripts/comprehensive-scan.sh)** - Full security assessment with reporting
 - **[Newman Integration](tools/scripts/run-newman.sh)** - Postman collection automation
 - **[Framework Validator](tools/scripts/validate-framework.sh)** - Installation and dependency validation
 - **[GitHub Actions Workflow](.github/workflows/api-security-audit.yml)** - CI/CD security integration
 
 ### 📄 Professional Templates
-- **[Vulnerability Report](templates/vulnerability-report.md)** - Technical findings documentation
-- **[Executive Summary](templates/executive-summary.md)** - C-level reporting template
+- **[Vulnerability Report](templates/vulnerability_report.md)** - Technical findings documentation
+- **[Executive Summary](templates/executive_summary.md)** - C-level reporting template
 
 ### 💡 Real-World Examples
 - **[SQL Injection Examples](examples/common-vulnerabilities/sql-injection/)** - Vulnerable and secure implementations
